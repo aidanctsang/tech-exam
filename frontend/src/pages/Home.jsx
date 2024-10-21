@@ -3,20 +3,26 @@ import { useNavigate } from "react-router-dom";
 import { useCookies } from "react-cookie";
 import axios from "axios";
 import Navbar from "../components/Navbar";
+import ConfirmationDialog from "../components/ConfirmationDialog";
 
 const Home = () => {
   const [employees, setEmployees] = useState([]);
+  const [showConfirm, setShowConfirm] = useState(false);
+  const [employeeIdToDelete, setEmployeeIdToDelete] = useState(null);
   const [cookies] = useCookies(["token", "role"]);
   const navigate = useNavigate();
 
   useEffect(() => {
     const fetchEmployees = async () => {
       try {
-        const { data } = await axios.get("http://localhost:3000/employees", {
-          headers: {
-            Authorization: `Bearer ${cookies.token}`,
-          },
-        });
+        const { data } = await axios.get(
+          `${process.env.REACT_APP_HOST_API}/employees`,
+          {
+            headers: {
+              Authorization: `Bearer ${cookies.token}`,
+            },
+          }
+        );
         setEmployees(data);
       } catch (error) {
         console.error("Error fetching employees", error);
@@ -33,7 +39,7 @@ const Home = () => {
 
   const handleDelete = async (id) => {
     try {
-      await axios.delete(`http://localhost:3000/employees/${id}`, {
+      await axios.delete(`${process.env.REACT_APP_HOST_API}/employees/${id}`, {
         headers: {
           Authorization: `Bearer ${cookies.token}`,
         },
@@ -42,6 +48,16 @@ const Home = () => {
     } catch (error) {
       console.error("Error deleting employee", error);
     }
+  };
+
+  const confirmDelete = (id) => {
+    setEmployeeIdToDelete(id);
+    setShowConfirm(true);
+  };
+
+  const handleConfirmDelete = () => {
+    setShowConfirm(false);
+    handleDelete(employeeIdToDelete);
   };
 
   return (
@@ -84,7 +100,7 @@ const Home = () => {
                   {cookies.role === "admin" && ( // Show delete button only for admins
                     <button
                       className="btn btn-danger"
-                      onClick={() => handleDelete(employee._id)}
+                      onClick={() => confirmDelete(employee._id)}
                     >
                       Delete
                     </button>
@@ -95,6 +111,13 @@ const Home = () => {
           </tbody>
         </table>
       </div>
+
+      <ConfirmationDialog
+        show={showConfirm}
+        onHide={() => setShowConfirm(false)}
+        onConfirm={handleConfirmDelete}
+        message="Are you sure you want to delete this employee?"
+      />
     </div>
   );
 };

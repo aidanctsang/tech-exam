@@ -3,6 +3,7 @@ import { useNavigate } from "react-router-dom";
 import axios from "axios";
 import { useCookies } from "react-cookie";
 import Navbar from "../components/Navbar";
+import ConfirmationDialog from "../components/ConfirmationDialog";
 
 const CreateEmployee = () => {
   const [employee, setEmployee] = useState({
@@ -10,6 +11,7 @@ const CreateEmployee = () => {
     lastname: "",
     position: "",
   });
+  const [showConfirm, setShowConfirm] = useState(false);
   const [cookies] = useCookies(["token"]);
   const navigate = useNavigate();
 
@@ -18,17 +20,30 @@ const CreateEmployee = () => {
   };
 
   const handleSubmit = async (e) => {
-    e.preventDefault();
     try {
-      await axios.post("http://localhost:3000/employees", employee, {
-        headers: {
-          Authorization: `Bearer ${cookies.token}`,
-        },
-      });
+      await axios.post(
+        `${process.env.REACT_APP_HOST_API}/employees`,
+        employee,
+        {
+          headers: {
+            Authorization: `Bearer ${cookies.token}`,
+          },
+        }
+      );
       navigate("/home");
     } catch (error) {
       console.error("Error creating employee", error);
     }
+  };
+
+  const confirmSubmit = (e) => {
+    e.preventDefault();
+    setShowConfirm(true);
+  };
+
+  const handleConfirm = () => {
+    setShowConfirm(false);
+    handleSubmit();
   };
 
   return (
@@ -36,7 +51,7 @@ const CreateEmployee = () => {
       <Navbar />
       <div className="container mt-4">
         <h2>Add Employee</h2>
-        <form onSubmit={handleSubmit}>
+        <form onSubmit={confirmSubmit}>
           <div className="mb-3">
             <label className="form-label">First Name</label>
             <input
@@ -75,6 +90,13 @@ const CreateEmployee = () => {
           </button>
         </form>
       </div>
+
+      <ConfirmationDialog
+        show={showConfirm}
+        onHide={() => setShowConfirm(false)}
+        onConfirm={handleConfirm}
+        message="Are you sure you want to create this employee?"
+      />
     </div>
   );
 };

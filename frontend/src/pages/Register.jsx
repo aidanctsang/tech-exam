@@ -27,9 +27,12 @@ const Register = () => {
   const handleSubmit = async (e) => {
     e.preventDefault();
     try {
-      const { data } = await axios.post("http://localhost:3000/register", {
-        ...inputValue,
-      });
+      const { data } = await axios.post(
+        `${process.env.REACT_APP_HOST_API}/register`,
+        {
+          ...inputValue,
+        }
+      );
 
       if (data.success) {
         handleSuccess("Registration Successful!");
